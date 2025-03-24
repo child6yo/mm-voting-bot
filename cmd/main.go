@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/joho/godotenv"
 	"github.com/child6yo/mm-voting-bot"
 	"github.com/child6yo/mm-voting-bot/pkg/app"
 	"github.com/child6yo/mm-voting-bot/pkg/service"
@@ -13,6 +14,10 @@ import (
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("env not initialized")
+    }
+
 	// Init Application
 	config := loadConfig()
 	app := app.NewApplication(config)
