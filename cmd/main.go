@@ -6,30 +6,35 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/joho/godotenv"
 	"github.com/child6yo/mm-voting-bot"
 	"github.com/child6yo/mm-voting-bot/pkg/app"
+	"github.com/child6yo/mm-voting-bot/pkg/repository"
 	"github.com/child6yo/mm-voting-bot/pkg/service"
+	"github.com/joho/godotenv"
 	"github.com/mattermost/mattermost-server/v6/model"
 )
 
 func main() {
 	if err := godotenv.Load(); err != nil {
 		fmt.Println("env not initialized")
-    }
+	}
 
 	// Init Application
 	config := loadConfig()
-	app := app.NewApplication(config)
-
+	conn, err := repository.CreateTarantoolDb()
+	if err != nil {
+		fmt.Println(err)
+	}
+	repository := repository.NewRepository(conn)
+	app := app.NewApplication(config, repository)
 	app.Logger.Info().Str("config", fmt.Sprint(app.Config)).Msg("")
 
 	setupGracefulShutdown(app)
 
-	// Create a new mattermost client.
+	// Create a new mattermost client
 	app.MattermostClient = model.NewAPIv4Client(app.Config.MattermostServer.String())
 
-	// Login.
+	// Login
 	app.MattermostClient.SetToken(app.Config.MattermostToken)
 
 	if user, resp, err := app.MattermostClient.GetUser("me", ""); err != nil {
@@ -40,7 +45,7 @@ func main() {
 		app.MattermostUser = user
 	}
 
-	// Find and save the bot's team to app struct.
+	// Find and save the bot's team to app struct
 	if team, resp, err := app.MattermostClient.GetTeamByName(app.Config.MattermostTeamName, ""); err != nil {
 		app.Logger.Fatal().Err(err).Msg("Could not find team. Is this bot a member ?")
 	} else {
@@ -48,7 +53,7 @@ func main() {
 		app.MattermostTeam = team
 	}
 
-	// Find and save the talking channel to app struct.
+	// Find and save the talking channel to app struct
 	if channel, resp, err := app.MattermostClient.GetChannelByName(
 		app.Config.MattermostChannel, app.MattermostTeam.Id, "",
 	); err != nil {
@@ -58,6 +63,7 @@ func main() {
 		app.MattermostChannel = channel
 	}
 
+	// Bot start
 	service := service.NewService(*app)
 	service.Bot.ListenToEvents()
 }
