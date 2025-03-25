@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  tarantool:
+    image: tarantool/tarantool:3.0.1
+    container_name: app-instance001
+    volumes:
+      - ./utils/tarantool:/opt/tarantool/app
+      - ./data:/var/lib/tarantool
+    environment:
+      - TT_APP_NAME=app
+      - TT_INSTANCE_NAME=instance001
+    ports:
+      - "3301:3301"
