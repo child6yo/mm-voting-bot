@@ -65,7 +65,7 @@ func main() {
 
 	// Bot start
 	service := service.NewService(*app)
-	service.Bot.ListenToEvents()
+	service.Voting.ListenToEvents()
 }
 
 func setupGracefulShutdown(app *app.Application) {

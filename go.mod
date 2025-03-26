@@ -7,6 +7,8 @@ require github.com/mattermost/mattermost-server/v6 v6.7.2
 require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/shopspring/decimal v1.3.1 // indirect
+	github.com/tarantool/go-iproto v1.1.0 // indirect
 )
 
 require (
@@ -39,6 +41,7 @@ require (
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/rs/zerolog v1.34.0
 	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/tarantool/go-tarantool/v2 v2.3.0
 	github.com/tinylib/msgp v1.1.6 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect

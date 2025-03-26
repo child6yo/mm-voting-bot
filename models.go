@@ -8,6 +8,6 @@ type Answer struct {
 
 type Voting struct {
 	Id int
-	UserId int
+	UserId string
 	Answers []Answer
 }

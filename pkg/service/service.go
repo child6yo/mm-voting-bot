@@ -5,19 +5,20 @@ import (
 	"github.com/mattermost/mattermost-server/v6/model"
 )
 
-type Bot interface {
+type Voting interface {
 	ListenToEvents()
 	sendMsgToTalkingChannel(msg string, replyToId string)
 	handleWebSocketEvent(event *model.WebSocketEvent)
 	handlePost(post *model.Post)
+	handleGetVoting(post *model.Post)
 }
 
 type Service struct {
-	Bot
+	Voting
 }
 
 func NewService(app app.Application) *Service {
 	return &Service{
-		Bot: NewBotServise(app),
+		Voting: NewVotingServise(app),
 	}
 }
