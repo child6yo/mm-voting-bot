@@ -9,7 +9,7 @@ box.schema.sequence.create('answers_id', {if_not_exists = true})
 box.schema.space.create('votings', {
     format = {
         {name = 'id', type = 'unsigned'},
-        {name = 'user_id', type = 'string'},
+        {name = 'user_id', type = 'string', unique = false},
     }
 })
 
@@ -21,9 +21,9 @@ box.space.votings:create_index('primary', {
 box.schema.space.create('answers', {
     format = {
         {name = 'id', type = 'unsigned'},
-        {name = 'voting_id', type = 'unsigned', foreign_key = {space = 'votings', field = 'id'}},
-        {name = 'description', type = 'string'},
-        {name = 'votes', type = 'number', default = 0}
+        {name = 'voting_id', type = 'unsigned', foreign_key = {space = 'votings', field = 'id'}, unique = false},
+        {name = 'description', type = 'string', unique = false},
+        {name = 'votes', type = 'number', default = 0, unique = false}
     }
 })
 
@@ -33,7 +33,8 @@ box.space.answers:create_index('primary', {
 })
 
 box.space.answers:create_index('voting_idx', {
-    parts = {{field = 'voting_id', type = 'unsigned'}}, 
+    parts = {{field = 'voting_id', type = 'unsigned'}},
+    unique = false, 
     if_not_exists = true
 })
 
@@ -56,3 +57,4 @@ function create_voting_with_answers(user_id, answers)
     
     return voting_id
 end
+
