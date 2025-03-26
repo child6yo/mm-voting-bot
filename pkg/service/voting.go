@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/child6yo/mm-voting-bot"
@@ -132,7 +133,7 @@ func (b *VotingService) handleVoting(post *model.Post) {
 	}
 
 	for _, a := range answers {
-		msg := fmt.Sprintf("Voting ID: %d. Option: %d: %-20s", votingId, a.Id, a.Description)
+		msg := fmt.Sprintf("Voting ID: %d. Answer ID %d: %s", votingId, a.Id, a.Description)
 		b.sendMsgToTalkingChannel(msg, post.Id)
 	}
 }
@@ -145,11 +146,29 @@ func (b *VotingService) handleGetVoting(post *model.Post) {
 		return
 	}
 
-	// TODO: db realization
+	votingId, err := strconv.Atoi(postTokens[1])
+	if err != nil {
+		b.app.Logger.Debug().Str("error", err.Error()).Msg("")
+		b.sendMsgToTalkingChannel("Use !vshow votingID", post.Id)
+		return
+	}
+
+	answers, err := b.app.Repository.Voting.GetVoting(votingId)
+	if err != nil {
+		b.app.Logger.Error().Str("error", err.Error()).Msg("")
+		b.sendMsgToTalkingChannel("Seems like voting ID invalid.", post.Id)
+		return
+	}
+	
+	for _, answer := range answers {
+		msg := fmt.Sprintf("Voting ID: %d. Answer ID: %d. Answer: %s",
+		votingId, answer.Id, answer.Description)
+		b.sendMsgToTalkingChannel(msg, post.Id)
+	}
 }
 
 func parseString(input string) []string {
-    re := regexp.MustCompile(`[a-zA-Z]+(?:\([^()]*\))*`)
+    re := regexp.MustCompile(`[1-9а-яА-Яa-zA-Z]+(?:\([^()]*\))*`)
     matches := re.FindAllString(input, -1)
     var result []string
     for _, match := range matches {

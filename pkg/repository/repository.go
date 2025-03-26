@@ -7,7 +7,7 @@ import (
 
 type Voting interface {
 	CreateVoting(voting votingbot.Voting) (int, error)
-	GetVoting()
+	GetVoting(votingId int) ([]votingbot.Answer, error)
 }
 
 type Repository struct {
