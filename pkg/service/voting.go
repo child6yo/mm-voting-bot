@@ -74,10 +74,6 @@ func (b *VotingService) handleWebSocketEvent(event *model.WebSocketEvent) {
 		return
 	}
 
-	if post.RootId != "" {
-		return
-	}
-
 	b.handlePost(post)
 }
 
@@ -92,16 +88,24 @@ func (b *VotingService) handlePost(post *model.Post) {
 	reStopVoting := regexp.MustCompile(`^!vstop`)
 	reDeleteVoting := regexp.MustCompile(`^!vdelete`)
 
+
+	var answerAt string
+	if post.RootId != "" {
+		answerAt = post.RootId
+	} else {
+		answerAt = post.Id
+	}
+
 	// TODO: реализовать возможность ответа на тред
 	switch {
 	case reVoting.MatchString(post.Message):
-		b.handleVoting(post)
+		b.handleVoting(post, answerAt)
 		return
 	case reVote.MatchString(post.Message):
 		
 		return
 	case reShowVoting.MatchString(post.Message):
-		b.handleGetVoting(post)
+		b.handleGetVoting(post, answerAt)
 		return
 	case reStopVoting.MatchString(post.Message):
 		return
@@ -110,7 +114,7 @@ func (b *VotingService) handlePost(post *model.Post) {
 	}
 }
 
-func (b *VotingService) handleVoting(post *model.Post) {
+func (b *VotingService) handleVoting(post *model.Post, answerAt string) {
 	postTokens := parseString(post.Message)
 	lenTokens := len(postTokens)
 	if lenTokens <= 1 {
@@ -134,38 +138,43 @@ func (b *VotingService) handleVoting(post *model.Post) {
 
 	for _, a := range answers {
 		msg := fmt.Sprintf("Voting ID: %d. Answer ID %d: %s", votingId, a.Id, a.Description)
-		b.sendMsgToTalkingChannel(msg, post.Id)
+		b.sendMsgToTalkingChannel(msg, answerAt)
 	}
 }
 
-func (b *VotingService) handleGetVoting(post *model.Post) {
+func (b *VotingService) handleGetVoting(post *model.Post, answerAt string) {
 	postTokens := parseString(post.Message)
 	lenTokens := len(postTokens)
 	if lenTokens <= 1 || lenTokens > 2 {
-		b.sendMsgToTalkingChannel("Use !vshow votingID", post.Id)
+		b.sendMsgToTalkingChannel("Use !vshow votingID", answerAt)
 		return
 	}
 
 	votingId, err := strconv.Atoi(postTokens[1])
 	if err != nil {
 		b.app.Logger.Debug().Str("error", err.Error()).Msg("")
-		b.sendMsgToTalkingChannel("Use !vshow votingID", post.Id)
+		b.sendMsgToTalkingChannel("Use !vshow votingID", answerAt)
 		return
 	}
 
 	answers, err := b.app.Repository.Voting.GetVoting(votingId)
 	if err != nil {
 		b.app.Logger.Error().Str("error", err.Error()).Msg("")
-		b.sendMsgToTalkingChannel("Seems like voting ID invalid.", post.Id)
+		b.sendMsgToTalkingChannel("Seems like voting ID invalid.", answerAt)
 		return
 	}
 	
 	for _, answer := range answers {
 		msg := fmt.Sprintf("Voting ID: %d. Answer ID: %d. Answer: %s",
 		votingId, answer.Id, answer.Description)
-		b.sendMsgToTalkingChannel(msg, post.Id)
+		b.sendMsgToTalkingChannel(msg, answerAt)
 	}
 }
+
+// TODO
+// func (b *VotingService) handleVote(post *model.Post) {
+
+// }
 
 func parseString(input string) []string {
     re := regexp.MustCompile(`[1-9а-яА-Яa-zA-Z]+(?:\([^()]*\))*`)
