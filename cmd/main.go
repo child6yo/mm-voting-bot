@@ -25,10 +25,12 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	addr := conn.Addr()
+
 	repository := repository.NewRepository(conn)
 	app := app.NewApplication(config, repository)
 	app.Logger.Info().Str("config", fmt.Sprint(app.Config)).Msg("")
-
+	app.Logger.Info().Str("tarantool address", addr.String()).Msg("")
 	setupGracefulShutdown(app)
 
 	// Create a new mattermost client

@@ -1,6 +1,7 @@
 package votingbot
 
 type Answer struct {
+	GlobalId int
 	Id int
 	Description string
 	Votes int

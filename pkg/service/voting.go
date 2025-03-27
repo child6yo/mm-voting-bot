@@ -33,8 +33,7 @@ func (b *VotingService) sendMsgToTalkingChannel(msg string, replyToId string) {
 	}
 }
 
-// ListenToEvents establishes a persistent WebSocket connection to Mattermost,  
-// listens for incoming events, and processes them asynchronously. It retries on failure.
+
 func (b *VotingService) ListenToEvents() {
 	var err error
 	for {
@@ -102,7 +101,7 @@ func (b *VotingService) handlePost(post *model.Post) {
 		b.handleVoting(post, answerAt)
 		return
 	case reVote.MatchString(post.Message):
-		
+		b.handleVote(post, answerAt)
 		return
 	case reShowVoting.MatchString(post.Message):
 		b.handleGetVoting(post, answerAt)
@@ -165,16 +164,40 @@ func (b *VotingService) handleGetVoting(post *model.Post, answerAt string) {
 	}
 	
 	for _, answer := range answers {
-		msg := fmt.Sprintf("Voting ID: %d. Answer ID: %d. Answer: %s",
-		votingId, answer.Id, answer.Description)
+		msg := fmt.Sprintf("Voting ID: %d. Answer ID: %d. Answer: %s. Votes: %d",
+		votingId, answer.Id, answer.Description, answer.Votes)
 		b.sendMsgToTalkingChannel(msg, answerAt)
 	}
 }
 
-// TODO
-// func (b *VotingService) handleVote(post *model.Post) {
+func (b *VotingService) handleVote(post *model.Post, answerAt string) {
+	postTokens := parseString(post.Message)
+	lenTokens := len(postTokens)
+	if lenTokens <= 1 || lenTokens > 3 {
+		b.sendMsgToTalkingChannel("Use !vote votingID answerID", answerAt)
+		return
+	}
 
-// }
+	ids := make([]int, 2)
+	for i := 1; i <= 2; i++ {
+		n, err := strconv.Atoi(postTokens[i])
+		if err != nil || n < 0 {
+			b.app.Logger.Debug().Str("error", err.Error()).Msg("")
+			b.sendMsgToTalkingChannel("Use !vote votingID answerID", answerAt)
+			return
+		}
+		ids[i-1] = n
+	}
+
+	err := b.app.Repository.Voting.Vote(ids)
+	if err != nil {
+		b.app.Logger.Error().Str("error", err.Error()).Msg("")
+		b.sendMsgToTalkingChannel("Seems like voting or answer ID invalid.", answerAt)
+		return
+	}
+
+	b.sendMsgToTalkingChannel("Vote accepted.", answerAt)
+}
 
 func parseString(input string) []string {
     re := regexp.MustCompile(`[1-9а-яА-Яa-zA-Z]+(?:\([^()]*\))*`)

@@ -5,6 +5,8 @@ import (
 )
 
 type Voting interface {
+	// ListenToEvents establishes a persistent WebSocket connection to Mattermost,  
+	// listens for incoming events, and processes them asynchronously. It retries on failure.
 	ListenToEvents()
 }
 

@@ -8,6 +8,7 @@ import (
 type Voting interface {
 	CreateVoting(voting votingbot.Voting) (int, error)
 	GetVoting(votingId int) ([]votingbot.Answer, error)
+	Vote(ids []int) error
 }
 
 type Repository struct {
