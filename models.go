@@ -1,14 +1,15 @@
 package votingbot
 
 type Answer struct {
-	GlobalId int
-	Id int
+	GlobalId    int
+	Id          int
 	Description string
-	Votes int
+	Votes       int
 }
 
 type Voting struct {
-	Id int
-	UserId string
-	Answers []Answer
+	Id        int
+	UserId    string
+	Answers   []Answer
+	DurationMinutes int
 }

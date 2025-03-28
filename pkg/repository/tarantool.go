@@ -7,7 +7,6 @@ import (
 	"github.com/tarantool/go-tarantool/v2"
 )
 
-
 func CreateTarantoolDb() (*tarantool.Connection, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()

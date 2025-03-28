@@ -83,7 +83,7 @@ func (b *VotingService) handlePost(post *model.Post) {
 
 	reVoting := regexp.MustCompile(`^!voting`)
 	reVote := regexp.MustCompile(`^!vote`)
-	reShowVoting := regexp.MustCompile(`^!vshow`)
+	reGetVoting := regexp.MustCompile(`^!vshow`)
 	reStopVoting := regexp.MustCompile(`^!vstop`)
 	reDeleteVoting := regexp.MustCompile(`^!vdelete`)
 
@@ -103,10 +103,11 @@ func (b *VotingService) handlePost(post *model.Post) {
 	case reVote.MatchString(post.Message):
 		b.handleVote(post, answerAt)
 		return
-	case reShowVoting.MatchString(post.Message):
+	case reGetVoting.MatchString(post.Message):
 		b.handleGetVoting(post, answerAt)
 		return
 	case reStopVoting.MatchString(post.Message):
+		b.handleStopVoting(post, answerAt)
 		return
 	case reDeleteVoting.MatchString(post.Message):
 		return
@@ -116,18 +117,25 @@ func (b *VotingService) handlePost(post *model.Post) {
 func (b *VotingService) handleVoting(post *model.Post, answerAt string) {
 	postTokens := parseString(post.Message)
 	lenTokens := len(postTokens)
-	if lenTokens <= 1 {
-		b.sendMsgToTalkingChannel("Write at least one answer option. Use !voting option1 option2...", post.Id)
+	if lenTokens <= 3 {
+		b.sendMsgToTalkingChannel("Use !voting DutationInMinutes Option1 Option2...", post.Id)
 		return
 	}
 
-	answers := make([]votingbot.Answer, lenTokens-1)
-	for i := 1; i < lenTokens; i++ {
-		answer := votingbot.Answer{Id: i, Description: postTokens[i], Votes: 0}
-		answers[i-1] = answer
+	duration, err := strconv.Atoi(postTokens[1])
+	if err != nil {
+		b.app.Logger.Debug().Str("error", err.Error()).Msg("")
+		b.sendMsgToTalkingChannel("Use !voting DutationInMinutes Option1 Option2...", answerAt)
+		return 
 	}
 
-	voting := votingbot.Voting{UserId: post.UserId, Answers: answers}
+	answers := make([]votingbot.Answer, lenTokens-2)
+	for i := 2; i < lenTokens; i++ {
+		answer := votingbot.Answer{Id: i-1, Description: postTokens[i], Votes: 0}
+		answers[i-2] = answer
+	}
+
+	voting := votingbot.Voting{UserId: post.UserId, Answers: answers, DurationMinutes: duration}
 
 	votingId, err := b.app.Repository.Voting.CreateVoting(voting)
 	if err != nil {
@@ -156,7 +164,7 @@ func (b *VotingService) handleGetVoting(post *model.Post, answerAt string) {
 		return
 	}
 
-	answers, err := b.app.Repository.Voting.GetVoting(votingId)
+	answers, err := b.app.Repository.Voting.GetAnswers(votingId)
 	if err != nil {
 		b.app.Logger.Error().Str("error", err.Error()).Msg("")
 		b.sendMsgToTalkingChannel("Seems like voting ID invalid.", answerAt)
@@ -190,7 +198,10 @@ func (b *VotingService) handleVote(post *model.Post, answerAt string) {
 	}
 
 	err := b.app.Repository.Voting.Vote(ids)
-	if err != nil {
+	if err == b.app.Repository.Errors.VotingExpired {
+		b.sendMsgToTalkingChannel("Time for this voting has expired.", answerAt)
+		return
+	} else if err != nil {
 		b.app.Logger.Error().Str("error", err.Error()).Msg("")
 		b.sendMsgToTalkingChannel("Seems like voting or answer ID invalid.", answerAt)
 		return
@@ -198,6 +209,38 @@ func (b *VotingService) handleVote(post *model.Post, answerAt string) {
 
 	b.sendMsgToTalkingChannel("Vote accepted.", answerAt)
 }
+
+func (b *VotingService) handleStopVoting(post *model.Post, answerAt string) {
+	postTokens := parseString(post.Message)
+	lenTokens := len(postTokens)
+	if lenTokens <= 1 || lenTokens > 2 {
+		b.sendMsgToTalkingChannel("Use !vstop votingID", answerAt)
+		return
+	}
+
+	votingId, err := strconv.Atoi(postTokens[1])
+	if err != nil {
+		b.app.Logger.Debug().Str("error", err.Error()).Msg("")
+		b.sendMsgToTalkingChannel("Use !vshow votingID", answerAt)
+		return
+	}
+
+	err = b.app.Repository.Voting.StopVoting(post.UserId, votingId)
+	if err == b.app.Repository.Errors.WrongUserId {
+		b.sendMsgToTalkingChannel("Only voting owner can stop voting.", answerAt)
+		return
+	} else if err != nil {
+		b.app.Logger.Error().Str("error", err.Error()).Msg("")
+		b.sendMsgToTalkingChannel("Seems like voting or answer ID invalid.", answerAt)
+		return
+	}
+
+	b.sendMsgToTalkingChannel("Voting stopped successfully.", answerAt)
+}
+
+// func (b *VotingService) handleDeleteVoting(post *model.Post, answerAt string) {
+
+// }
 
 func parseString(input string) []string {
     re := regexp.MustCompile(`[1-9а-яА-Яa-zA-Z]+(?:\([^()]*\))*`)
