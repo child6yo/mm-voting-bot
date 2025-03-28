@@ -4,7 +4,7 @@ import (
 	"net/url"
 )
 
-type Config struct {
+type MattermostConfig struct {
 	MattermostUserName string
 	MattermostTeamName string
 	MattermostToken    string
@@ -12,3 +12,8 @@ type Config struct {
 	MattermostServer   *url.URL
 }
 
+type TarantoolConfig struct {
+	TarantoolAddress string
+	TarantoolUsername string
+	TarantoolPassword string
+}

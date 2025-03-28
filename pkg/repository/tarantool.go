@@ -4,16 +4,17 @@ import (
 	"context"
 	"time"
 
+	votingbot "github.com/child6yo/mm-voting-bot"
 	"github.com/tarantool/go-tarantool/v2"
 )
 
-func CreateTarantoolDb() (*tarantool.Connection, error) {
+func CreateTarantoolDb(config votingbot.TarantoolConfig) (*tarantool.Connection, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	dialer := tarantool.NetDialer{
-		Address:  "0.0.0.0:3301",
-		User:     "votingbot",
-		Password: "123456",
+		Address:  config.TarantoolAddress,
+		User:     config.TarantoolUsername,
+		Password: config.TarantoolPassword,
 	}
 	opts := tarantool.Opts{
 		Timeout: time.Second,

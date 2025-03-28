@@ -11,7 +11,7 @@ import (
 )
 
 type Application struct {
-	Config                    votingbot.Config
+	Config                    votingbot.MattermostConfig
 	Logger                    zerolog.Logger
 	Repository                *repository.Repository
 	MattermostClient          *model.Client4
@@ -21,7 +21,7 @@ type Application struct {
 	MattermostTeam            *model.Team
 }
 
-func NewApplication(config votingbot.Config, repository *repository.Repository) *Application {
+func NewApplication(config votingbot.MattermostConfig, repository *repository.Repository) *Application {
 	return &Application{
 		Config: config,
 		Logger: zerolog.New(

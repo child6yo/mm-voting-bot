@@ -10,25 +10,20 @@ import (
 	"github.com/child6yo/mm-voting-bot/pkg/app"
 	"github.com/child6yo/mm-voting-bot/pkg/repository"
 	"github.com/child6yo/mm-voting-bot/pkg/service"
-	"github.com/joho/godotenv"
 	"github.com/mattermost/mattermost-server/v6/model"
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		fmt.Println("env not initialized")
-	}
-
 	// Init Application
-	config := loadConfig()
-	conn, err := repository.CreateTarantoolDb()
+	mmConfig, ttConfig := loadConfig()
+	conn, err := repository.CreateTarantoolDb(ttConfig)
 	if err != nil {
 		fmt.Println(err)
 	}
 	addr := conn.Addr()
 
 	repository := repository.NewRepository(conn)
-	app := app.NewApplication(config, repository)
+	app := app.NewApplication(mmConfig, repository)
 	app.Logger.Info().Str("config", fmt.Sprint(app.Config)).Msg("")
 	app.Logger.Info().Str("tarantool address", addr.String()).Msg("")
 	setupGracefulShutdown(app)
@@ -85,14 +80,20 @@ func setupGracefulShutdown(app *app.Application) {
 	}()
 }
 
-func loadConfig() votingbot.Config {
-	var settings votingbot.Config
+func loadConfig() (votingbot.MattermostConfig, votingbot.TarantoolConfig) {
+	var mmSettings votingbot.MattermostConfig
 
-	settings.MattermostTeamName = os.Getenv("MM_TEAM")
-	settings.MattermostUserName = os.Getenv("MM_USERNAME")
-	settings.MattermostToken = os.Getenv("MM_TOKEN")
-	settings.MattermostChannel = os.Getenv("MM_CHANNEL")
-	settings.MattermostServer, _ = url.Parse(os.Getenv("MM_SERVER"))
+	mmSettings.MattermostTeamName = os.Getenv("BOT_MM_TEAM")
+	mmSettings.MattermostUserName = os.Getenv("BOT_MM_USERNAME")
+	mmSettings.MattermostToken = os.Getenv("BOT_MM_TOKEN")
+	mmSettings.MattermostChannel = os.Getenv("BOT_MM_CHANNEL")
+	mmSettings.MattermostServer, _ = url.Parse(os.Getenv("BOT_MM_SERVER"))
 
-	return settings
+	var ttSettings votingbot.TarantoolConfig
+
+	ttSettings.TarantoolAddress = os.Getenv("BOT_TT_ADDRES")
+	ttSettings.TarantoolUsername = os.Getenv("BOT_TT_USERNAME")
+	ttSettings.TarantoolPassword = os.Getenv("BOT_TT_PASSWORD")
+
+	return mmSettings, ttSettings
 }
