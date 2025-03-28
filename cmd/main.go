@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/child6yo/mm-voting-bot"
+	votingbot "github.com/child6yo/mm-voting-bot"
 	"github.com/child6yo/mm-voting-bot/pkg/app"
 	"github.com/child6yo/mm-voting-bot/pkg/repository"
 	"github.com/child6yo/mm-voting-bot/pkg/service"

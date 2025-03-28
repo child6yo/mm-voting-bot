@@ -45,6 +45,9 @@ func (v *VotingRepo) GetAnswers(votingId int) ([]votingbot.Answer, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(answers) < 1 {
+		return nil, fmt.Errorf("empty data: %v", answers)
+	}
 
 	var result []votingbot.Answer
 	for _, item := range answers {
@@ -65,12 +68,17 @@ func (v *VotingRepo) GetAnswers(votingId int) ([]votingbot.Answer, error) {
 
 func (v *VotingRepo) getVoting(votingId int) ([]interface{}, error) {
 	voting, err := v.db.Do(tarantool.NewSelectRequest("votings"). // return []interface{}{}
-	Iterator(tarantool.IterEq).								 // format: [id, userId, expiresAt]
-	Key([]interface{}{uint(votingId)})).Get()
+									Iterator(tarantool.IterEq). // format: [id, userId, expiresAt]
+									Key([]interface{}{uint(votingId)})).Get()
 
 	if err != nil {
 		return nil, err
 	}
+
+	if len(voting) < 1 {
+		return nil, fmt.Errorf("empty data: %v", voting)
+	}
+
 	tuple, ok := voting[0].([]interface{})
 	if !ok {
 		return nil, fmt.Errorf("invalid tuple format: %v", voting)
@@ -133,7 +141,7 @@ func (v *VotingRepo) StopVoting(userId string, votingId int) error {
 
 	uId, ok := voting[1].(string)
 	if !ok {
-			return fmt.Errorf("error with parsing userId")
+		return fmt.Errorf("error with parsing userId")
 	}
 
 	if userId != uId {
@@ -158,9 +166,30 @@ func (v *VotingRepo) StopVoting(userId string, votingId int) error {
 	return nil
 }
 
-// func (v *VotingRepo) DeleteVoting(userId string, votingId int) error {
+func (v *VotingRepo) DeleteVoting(userId string, votingId int) error {
+	voting, err := v.getVoting(votingId) // format: [id, userId, expiresAt]
 
-// }
+	if err != nil {
+		return err
+	}
+
+	uId, ok := voting[1].(string)
+	if !ok {
+		return fmt.Errorf("error with parsing userId")
+	}
+
+	if userId != uId {
+		return errWrongUserId
+	}
+
+	_, err = v.db.Do(tarantool.NewCallRequest("delete_voting_with_answers").
+		Args([]interface{}{votingId})).Get()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func getDescriptions(answers []votingbot.Answer) []string {
 	desc := make([]string, len(answers))
@@ -169,4 +198,3 @@ func getDescriptions(answers []votingbot.Answer) []string {
 	}
 	return desc
 }
-

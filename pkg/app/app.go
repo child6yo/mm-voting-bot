@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/child6yo/mm-voting-bot"
+	votingbot "github.com/child6yo/mm-voting-bot"
 	"github.com/child6yo/mm-voting-bot/pkg/repository"
 	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/rs/zerolog"
@@ -28,7 +28,7 @@ func NewApplication(config votingbot.Config, repository *repository.Repository) 
 			zerolog.ConsoleWriter{
 				Out:        os.Stdout,
 				TimeFormat: time.RFC822,
-			},).With().Timestamp().Logger(),
+			}).With().Timestamp().Logger(),
 		Repository: repository,
 	}
 }

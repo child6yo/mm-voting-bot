@@ -10,6 +10,7 @@ type Voting interface {
 	GetAnswers(votingId int) ([]votingbot.Answer, error)
 	Vote(ids []int) error
 	StopVoting(userId string, votingId int) error
+	DeleteVoting(userId string, votingId int) error
 }
 
 type Repository struct {

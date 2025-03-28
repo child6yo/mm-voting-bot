@@ -15,4 +15,4 @@ groups:
               - uri: '0.0.0.0:3301'
 
 app:
-  file: '/opt/tarantool/app/myapp.lua'
+  file: '/opt/tarantool/app/init.lua'

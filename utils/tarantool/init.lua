@@ -68,3 +68,10 @@ function create_voting_with_answers(user_id, answers, duration_minutes)
     return voting_id
 end
 
+function delete_voting_with_answers(voting_id)
+    box.space.answers.index.voting_idx:pairs{voting_id}:each(function(answer)
+        box.space.answers:delete{answer.id}
+    end)
+    
+    box.space.votings:delete{voting_id}
+end
