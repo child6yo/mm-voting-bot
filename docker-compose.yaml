@@ -17,64 +17,6 @@ services:
     networks:
       - dev-network
 
-  postgres:
-    image: postgres:13-alpine
-    container_name: postgres
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    pids_limit: 100
-    read_only: true
-    tmpfs:
-      - /tmp
-      - /var/run/postgresql
-    volumes:
-      - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data
-    environment:
-      # timezone inside container
-      - TZ
-
-      # necessary Postgres options/variables
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
-    networks:
-      - dev-network
-
-  mattermost:
-    depends_on:
-      - postgres
-    image: mattermost/mattermost-enterprise-edition:9.11.6
-    container_name: mattermost
-    security_opt:
-      - no-new-privileges:true
-    pids_limit: 200
-    tmpfs:
-      - /tmp
-    volumes:
-      - ${MATTERMOST_CONFIG_PATH}:/mattermost/config:rw
-      - ${MATTERMOST_DATA_PATH}:/mattermost/data:rw
-      - ${MATTERMOST_LOGS_PATH}:/mattermost/logs:rw
-      - ${MATTERMOST_PLUGINS_PATH}:/mattermost/plugins:rw
-      - ${MATTERMOST_CLIENT_PLUGINS_PATH}:/mattermost/client/plugins:rw
-      - ${MATTERMOST_BLEVE_INDEXES_PATH}:/mattermost/bleve-indexes:rw
-    environment:
-      - TZ
-
-      - MM_SQLSETTINGS_DRIVERNAME
-      - MM_SQLSETTINGS_DATASOURCE
-
-      - MM_BLEVESETTINGS_INDEXDIR
-
-      - MM_SERVICESETTINGS_SITEURL
-      - MM_SERVICESETTINGS_ALLOWCORSFROM
-    ports:
-      - ${APP_PORT}:8065
-      - ${CALLS_PORT}:${CALLS_PORT}/udp
-      - ${CALLS_PORT}:${CALLS_PORT}/tcp
-    networks:
-      - dev-network
-
   votingbot:
     container_name: votingbot
     build: ./
@@ -94,7 +36,6 @@ services:
       - 8000:8000
     depends_on: 
       - tarantool
-      - mattermost
     networks:
       - dev-network
 
