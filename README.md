@@ -14,6 +14,7 @@ cd mm-voting-bot
 ```
 docker compose -f docker-compose.mm.yaml up -d
 ```
+- mattermost будет доступен по адресу http://localhost:8065/
 3. Создание бота внутри mattermost:
 - Перейдите в: Integrations > Bot Accounts
 - Add Bot Account
