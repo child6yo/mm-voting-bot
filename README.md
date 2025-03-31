@@ -10,7 +10,6 @@
 git clone https://github.com/child6yo/mm-voting-bot 
 cd mm-voting-bot
 ```
-1.1
 - Переименуйе .env.example в .env
 2. Запуск среды mattermost:
 ```
